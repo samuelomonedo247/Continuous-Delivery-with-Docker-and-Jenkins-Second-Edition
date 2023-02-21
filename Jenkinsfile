@@ -40,7 +40,7 @@ podTemplate(containers: [
                     // https://www.jenkins.io/doc/pipeline/steps/htmlpublisher/
                     publishHTML (target: [
                         reportDir: 'Chapter08/sample1/build/reports/checkstyle',
-                        reportFiles: 'checkstyle.html',
+                        reportFiles: 'main.html',
                         reportName: "JaCoCo Checkstyle"
                     ])                       
                 }
