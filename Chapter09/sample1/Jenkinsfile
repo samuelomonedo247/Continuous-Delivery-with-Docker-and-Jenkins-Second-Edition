@@ -1,0 +1,82 @@
+podTemplate(yaml: '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: centos
+    image: centos
+    command:
+    - sleep
+    args:
+    - 99d
+  restartPolicy: Never
+''') {
+  node(POD_LABEL) {
+    stage('k8s') {
+      git 'https://github.com/samuelomonedo247/Continuous-Delivery-with-Docker-and-Jenkins-Second-Edition.git'
+      container('centos') {
+        stage('start calculator') {
+          steps {
+            sh '''
+            cd Chapter09/sample1
+            
+            cat > StepDefinitions.java <<EOF
+            package acceptance;
+            import cucumber.api.java.en.Given;
+            import cucumber.api.java.en.Then;
+            import cucumber.api.java.en.When;
+            import org.springframework.web.client.RestTemplate;
+            import static org.junit.Assert.assertEquals;
+
+            public class StepDefinitions {
+                private String server = System.getProperty("calculator.url");
+                private RestTemplate restTemplate = new RestTemplate();
+                private String a;
+                private String b;
+                private String result;
+
+                @Given("^I have two numbers: (.*) and (.*)$")
+                public void i_have_two_numbers(String a, String b) throws Throwable {
+                    this.a = a;
+                    this.b = b;
+                }
+
+                @When("^the calculator sums them$")
+                public void the_calculator_sums_them() throws Throwable {
+                    String url = String.format("%s/sum?a=%s&b=%s", server, a, b);
+                    result = restTemplate.getForObject(url, String.class);
+                }
+
+                @Then("^I receive (.*) as a result$")
+                public void i_receive_as_a_result(String expectedResult) throws Throwable {
+                    assertEquals(expectedResult, result);
+                }
+            }
+            EOF
+            
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x ./kubectl
+
+            curl -LO https://raw.githubusercontent.com/samuelomonedo247/Continuous-Delivery-with-Docker-and-Jenkins-Second-Edition/master/Chapter08/sample1/hazelcast.yaml
+            curl -LO https://raw.githubusercontent.com/samuelomonedo247/Continuous-Delivery-with-Docker-and-Jenkins-Second-Edition/master/Chapter08/sample1/calculator.yaml
+
+            curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/apis/apps/v1/namespaces/default/deployments -XPOST -H "Content-type: application/yaml" --data-binary @hazelcast.yaml
+            curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/apis/apps/v1/namespaces/default/deployments -XPOST -H "Content-type: application/yaml" --data-binary @calculator.yaml
+            '''
+          }
+        }
+        stage('Test Calculator') {
+          steps {
+            script {
+              def result = sh(script: "curl -s 'http://calculator-service:8080/sum?a=6&b=2'", returnStdout: true).trim()
+              if (result == "8") {
+                echo 'Test Passed'
+              } else {
+                echo 'Test Failed'
+                currentBuild.result = 'FAILURE'
+              }
+            }
+          }
+        }
+      }
+    }
