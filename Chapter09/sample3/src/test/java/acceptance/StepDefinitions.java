@@ -17,16 +17,10 @@ public class StepDefinitions {
     private String b;
     private String result;
 
-    @Given("^I have two numbers: (.*) and (.*)$")
-    public void i_have_two_numbers(String a, String b) throws Throwable {
+    @Given("^I have dividend and divisor: (.*) and (.*)$")
+    public void i_have_dividend_and_divisor(String a, String b) throws Throwable {
         this.a = a;
         this.b = b;
-    }
-
-    @When("^the calculator sums them$")
-    public void the_calculator_sums_them() throws Throwable {
-        String url = String.format("%s/sum?a=%s&b=%s", server, a, b);
-        result = restTemplate.getForObject(url, String.class);
     }
 
     @When("^the calculator divides them$")
@@ -35,8 +29,8 @@ public class StepDefinitions {
         result = restTemplate.getForObject(url, String.class);
     }
 
-    @Then("^I receive (.*) as a result$")
-    public void i_receive_as_a_result(String expectedResult) throws Throwable {
+    @Then("^I receive (.*) as the quotient$")
+    public void i_receive_as_the_quotient(String expectedResult) throws Throwable {
         assertEquals(expectedResult, result);
     }
 }
