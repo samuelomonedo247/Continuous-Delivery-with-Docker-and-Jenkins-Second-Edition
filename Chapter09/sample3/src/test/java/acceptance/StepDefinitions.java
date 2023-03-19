@@ -29,8 +29,8 @@ public class StepDefinitions {
         result = restTemplate.getForObject(url, String.class);
     }
 
-    @When("^the calculator divides them$")
-    public void the_calculator_divides_them() throws Throwable {
+    @When("^the calculator divs them$")
+    public void the_calculator_divs_them() throws Throwable {
         String url = String.format("%s/divide?a=%s&b=%s", server, a, b);
         result = restTemplate.getForObject(url, String.class);
     }
