@@ -5,7 +5,7 @@ Feature: Calculator
     Then I receive 3 as a result
 
 Feature: Calculator
-  Scenario: Divide two numbers
+  Scenario: Div two numbers
     Given I have dividend and divisor: 6 and 3
     When the calculator divides them
     Then I receive 2 as the quotient
