@@ -5,10 +5,15 @@ metadata:
   labels:
     app: calculator
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: calculator
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 0
   template:
     metadata:
       labels:
